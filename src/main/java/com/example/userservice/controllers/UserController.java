@@ -1,8 +1,10 @@
 package com.example.userservice.controllers;
 
 import com.example.userservice.dtos.SignUpRequestDTO;
+import com.example.userservice.dtos.SignUpResponseDTO;
 import com.example.userservice.models.User;
 import com.example.userservice.services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,11 +20,13 @@ public class UserController {
 
     //sign-up api implementation
     @PostMapping("/sign-up")
-    public ResponseEntity<User> createUser(@RequestBody SignUpRequestDTO signUpRequestDTO) {
+    public ResponseEntity<SignUpResponseDTO> createUser(@Valid @RequestBody SignUpRequestDTO signUpRequestDTO) {
         String username=signUpRequestDTO.getName();
         String email=signUpRequestDTO.getEmail();
         String password=signUpRequestDTO.getPassword();
 
-        return ResponseEntity.ok(userService.createUser(username, email, password));
+        User user = userService.createUser(username, email, password);
+        SignUpResponseDTO response = new SignUpResponseDTO(user.getName(), user.getEmail());
+        return ResponseEntity.ok(response);
     }
 }
