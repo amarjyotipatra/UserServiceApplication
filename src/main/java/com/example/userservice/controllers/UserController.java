@@ -73,7 +73,13 @@ public class UserController {
         }
     }
 
-    //profile api implementation (protected endpoint)
+    /**
+     * Retrieves user profile information for authenticated users.
+     * This is a protected endpoint that requires a valid JWT token.
+     *
+     * @param authHeader Authorization header containing Bearer token
+     * @return ResponseEntity with user profile data or error message
+     */
     @GetMapping("/profile")
     public ResponseEntity<Map<String, Object>> getUserProfile(
             @RequestHeader("Authorization") String authHeader) {
@@ -81,18 +87,20 @@ public class UserController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // Extract token from Authorization header
+            // Extract JWT token from Authorization header by removing "Bearer " prefix
             String token = authHeader.substring(7); // Remove "Bearer " prefix
 
-            // Get security claims from token
+            // Validate token and extract user security claims (user info)
             Map<String, Object> securityClaims = userService.getSecurityClaimsFromToken(token);
 
+            // Check if token is valid - empty claims indicate invalid/expired token
             if (securityClaims.isEmpty()) {
                 response.put("message", "Invalid token");
                 response.put("status", ResponseStatus.FAILURE);
                 return ResponseEntity.status(401).body(response);
             }
 
+            // Return user profile information from token claims
             response.put("userInfo", securityClaims);
             response.put("message", "Profile retrieved successfully");
             response.put("status", ResponseStatus.SUCCESS);
@@ -100,6 +108,7 @@ public class UserController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
+            // Handle any errors during token processing or profile retrieval
             response.put("message", "Error retrieving profile: " + e.getMessage());
             response.put("status", ResponseStatus.FAILURE);
             return ResponseEntity.status(401).body(response);

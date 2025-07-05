@@ -28,8 +28,7 @@ public class TokenValidationController {
      * Validates JWT structure, signature, expiration, and database status
      */
     @PostMapping("/validate-token")
-    public ResponseEntity<ValidatedTokenResponseDTO> validateToken(
-            @Valid @RequestBody ValidateTokenRequestDTO request) {
+    public ResponseEntity<ValidatedTokenResponseDTO> validateToken(@Valid @RequestBody ValidateTokenRequestDTO request) {
 
         try {
             ValidatedTokenResponseDTO response = tokenValidationService
