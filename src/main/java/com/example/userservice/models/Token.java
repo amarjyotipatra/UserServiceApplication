@@ -18,6 +18,8 @@ public class Token extends BaseModel{
     @ManyToOne
     private User user;
 
+    private boolean isExpired;
+
     @Temporal(TemporalType.TIMESTAMP)
     private Date expiredAt;
 }

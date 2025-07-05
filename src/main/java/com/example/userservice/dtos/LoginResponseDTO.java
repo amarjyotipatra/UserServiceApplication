@@ -5,10 +5,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SignUpResponseDTO {
-    private String name;
+public class LoginResponseDTO {
+    private String token;
+    private String username;
     private String email;
+    private String tokenType = "Bearer";
+    private  String message;
     private ResponseStatus status;
-    private String message;
-
 }
