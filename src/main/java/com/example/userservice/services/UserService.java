@@ -7,7 +7,7 @@ import com.example.userservice.models.User;
 import com.example.userservice.repositories.TokenRepository;
 import com.example.userservice.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -18,17 +18,17 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
-    private final SCryptPasswordEncoder sCryptPasswordEncoder;
+    private final BCryptPasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
     @Autowired
     private TokenService tokenService;
 
     public UserService(UserRepository userRepository, TokenRepository tokenRepository,
-                      SCryptPasswordEncoder sCryptPasswordEncoder, JwtService jwtService) {
+                      BCryptPasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
-        this.sCryptPasswordEncoder = sCryptPasswordEncoder;
+        this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
     }
 
@@ -54,7 +54,7 @@ public class UserService {
         User user = new User();
         user.setName(username.trim());
         user.setEmail(email.trim().toLowerCase());
-        user.setPassword(sCryptPasswordEncoder.encode(password));
+        user.setPassword(passwordEncoder.encode(password));
         user.setVerified(false); // Set default verification status
 
         return userRepository.save(user);
@@ -65,7 +65,7 @@ public class UserService {
         if (user == null) {
             throw new InvalidCredentialsException("Invalid username");
         }
-        if (!sCryptPasswordEncoder.matches(password, user.getPassword())) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new InvalidCredentialsException("Invalid password");
         }
 

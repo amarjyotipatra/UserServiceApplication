@@ -10,7 +10,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -28,7 +28,7 @@ public class UserServiceTest {
     private TokenRepository tokenRepository;
 
     @Mock
-    private SCryptPasswordEncoder sCryptPasswordEncoder;
+    private BCryptPasswordEncoder passwordEncoder;
 
     @Mock
     private JwtService jwtService;
@@ -49,7 +49,7 @@ public class UserServiceTest {
 
         when(userRepository.existsByName(anyString())).thenReturn(false);
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
-        when(sCryptPasswordEncoder.encode(anyString())).thenReturn("encoded_password");
+        when(passwordEncoder.encode(anyString())).thenReturn("encoded_password");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         userService.signupUser("testuser", "testuser@example.com", "password");
@@ -69,7 +69,7 @@ public class UserServiceTest {
         user.setPassword("encoded_password");
 
         when(userRepository.findByName(anyString())).thenReturn(user);
-        when(sCryptPasswordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(jwtService.generateToken(user)).thenReturn("test_token");
 
         String token = userService.login("testuser", "password");
