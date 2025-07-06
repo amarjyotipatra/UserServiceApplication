@@ -12,11 +12,9 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
@@ -57,12 +55,6 @@ public class JwtService {
         claims.put("username", user.getName());
         claims.put("isVerified", user.isVerified());
 
-        // Add roles if they exist
-        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
-            claims.put("roles", user.getRoles().stream()
-                    .map(role -> role.getRoleName())
-                    .collect(Collectors.toList()));
-        }
 
         return Jwts.builder()
                 // Standard Claims
@@ -121,7 +113,7 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
         // This parser is only for extracting claims, not for validation.
         return Jwts.parser()
                 .verifyWith(getSigningKey())
@@ -184,7 +176,7 @@ public class JwtService {
     }
 
     /**
-     * Extract all security-relevant claims for authorization
+     * Extract basic security-relevant claims for authorization
      */
     public Map<String, Object> extractSecurityClaims(String token) {
         Map<String, Object> securityClaims = new HashMap<>();
@@ -195,13 +187,6 @@ public class JwtService {
             securityClaims.put("issuedAt", extractClaim(token, Claims::getIssuedAt));
             securityClaims.put("expiration", extractExpiration(token));
             securityClaims.put("tokenId", extractTokenId(token));
-
-            // Extract roles for authorization
-            Claims claims = extractAllClaims(token);
-            Object roles = claims.get("roles");
-            if (roles != null) {
-                securityClaims.put("roles", roles);
-            }
         } catch (Exception e) {
             // Return empty map if token is invalid
             return new HashMap<>();
@@ -209,19 +194,6 @@ public class JwtService {
         return securityClaims;
     }
 
-    /**
-     * Check if user has specific role
-     */
-    public boolean hasRole(String token, String role) {
-        try {
-            Claims claims = extractAllClaims(token);
-            @SuppressWarnings("unchecked")
-            List<String> roles = (List<String>) claims.get("roles");
-            return roles != null && roles.contains(role);
-        } catch (Exception e) {
-            return false;
-        }
-    }
 
     /**
      * Get all claims from token for debugging/logging.

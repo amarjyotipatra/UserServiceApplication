@@ -111,22 +111,4 @@ public class UserService {
     public Map<String, Object> getSecurityClaimsFromToken(String token) {
         return jwtService.extractSecurityClaims(token);
     }
-
-    /**
-     * Logout user from all devices
-     */
-    public int logoutAllDevices(String tokenString) {
-        if (tokenString == null || tokenString.trim().isEmpty()) {
-            throw new IllegalArgumentException("Token cannot be empty");
-        }
-
-        // Get user from token
-        User user = tokenService.getUserFromToken(tokenString);
-        if (user == null) {
-            throw new IllegalArgumentException("Invalid token");
-        }
-
-        // Logout from all devices
-        return tokenService.logoutAllUserTokens(user);
-    }
 }

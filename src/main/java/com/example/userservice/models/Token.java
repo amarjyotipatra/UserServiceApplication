@@ -1,9 +1,6 @@
 package com.example.userservice.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.Temporal;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,13 +10,17 @@ import java.util.Date;
 @Getter
 @Setter
 public class Token extends BaseModel{
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String token;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(nullable = false)
     private boolean isExpired;
 
     @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = false)
     private Date expiredAt;
 }

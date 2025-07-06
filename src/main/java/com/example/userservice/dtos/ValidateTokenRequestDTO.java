@@ -8,5 +8,4 @@ import lombok.Setter;
 public class ValidateTokenRequestDTO {
     private String token;
     private String requiredRole; // Optional: for role-based validation
-    private String requiredPermission; // Optional: for permission-based validation
 }

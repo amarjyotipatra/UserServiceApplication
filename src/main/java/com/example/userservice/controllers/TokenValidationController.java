@@ -157,10 +157,9 @@ public class TokenValidationController {
             response.put("message", isAuthorized ? "User is authorized" : "User is not authorized");
             response.put("status", ResponseStatus.SUCCESS);
 
-            // Add authorization details
+            // Add authorization details (simplified - no role checking)
             Map<String, Object> authDetails = new HashMap<>();
-            authDetails.put("hasRole", requiredRole != null &&
-                tokenValidationService.hasRole(token, requiredRole));
+            authDetails.put("hasRole", false); // Simplified - no role checking anymore
             authDetails.put("checkedRole", requiredRole);
             authDetails.put("checkedPermission", requiredPermission);
             response.put("authorizationDetails", authDetails);

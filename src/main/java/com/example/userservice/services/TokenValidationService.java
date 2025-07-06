@@ -68,17 +68,7 @@ public class TokenValidationService {
             // Step 6: Extract all token information
             populateTokenInformation(response, token, dbToken);
 
-            // Step 7: Role-based validation if required
-            if (requiredRole != null && !requiredRole.trim().isEmpty()) {
-                if (!hasRequiredRole(token, requiredRole)) {
-                    response.setValid(false);
-                    response.setMessage("User does not have required role: " + requiredRole);
-                    response.setStatus(ResponseStatus.FAILURE);
-                    return response;
-                }
-            }
-
-            // Step 8: Success response
+            // Step 7: Success response
             response.setValid(true);
             response.setMessage("Token is valid and user is authorized");
             response.setStatus(ResponseStatus.SUCCESS);
@@ -135,36 +125,17 @@ public class TokenValidationService {
     }
 
     /**
-     * Check user authorization (role and permission based)
+     * Check user authorization (simplified - no role checking)
      */
     public boolean checkUserAuthorization(String token, String requiredRole, String requiredPermission) {
         try {
-            // Check role if provided
-            if (requiredRole != null && !requiredRole.trim().isEmpty()) {
-                if (!jwtService.hasRole(token, requiredRole)) {
-                    return false;
-                }
-            }
-
-            // Check permission if provided (you can extend this based on your permission system)
-            if (requiredPermission != null && !requiredPermission.trim().isEmpty()) {
-                // For now, we'll check if the user has admin role for any permission
-                // You can implement a more sophisticated permission system here
-                return jwtService.hasRole(token, "ADMIN");
-            }
-
+            // Simplified validation - no role checking for now
+            // Since we removed role functionality, just return true if token is valid
             return true;
 
         } catch (Exception e) {
             return false;
         }
-    }
-
-    /**
-     * Check if user has a specific role
-     */
-    public boolean hasRole(String token, String role) {
-        return jwtService.hasRole(token, role);
     }
 
     /**
@@ -231,14 +202,6 @@ public class TokenValidationService {
         } catch (Exception e) {
             // If we can't extract some information, it's still valid but with limited info
             response.setMessage("Token is valid but some information could not be extracted: " + e.getMessage());
-        }
-    }
-
-    private boolean hasRequiredRole(String token, String requiredRole) {
-        try {
-            return jwtService.hasRole(token, requiredRole);
-        } catch (Exception e) {
-            return false;
         }
     }
 }

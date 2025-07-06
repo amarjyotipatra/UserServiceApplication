@@ -1,21 +1,22 @@
 package com.example.userservice.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
 
 @Entity(name = "users")
 @Getter
 @Setter
 public class User extends BaseModel{
+    @Column(length = 100, nullable = false)
     private String name;
-    private String email;
-    private String password;// Hashed password
-    private boolean isVerified;
 
-    @ManyToMany
-    private List<Role> roles;
+    @Column(length = 255, nullable = false, unique = true)
+    private String email;
+
+    @Column(length = 255, nullable = false)
+    private String password;// Hashed password
+
+    @Column(nullable = false)
+    private boolean isVerified;
 }

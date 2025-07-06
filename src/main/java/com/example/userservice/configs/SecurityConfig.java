@@ -23,7 +23,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 // Public endpoints - no authentication required
                 .requestMatchers("/api/v1/users/signup", "/api/v1/users/login").permitAll()
-                .requestMatchers("/actuator/**", "/error").permitAll()
+                .requestMatchers("/error").permitAll()
 
                 // Demo endpoints - public for testing
                 .requestMatchers("/api/v1/demo/**").permitAll()
@@ -31,9 +31,11 @@ public class SecurityConfig {
                 // Token validation endpoints - public for microservice communication
                 .requestMatchers("/api/v1/auth/**").permitAll()
 
+                // Actuator endpoints - public for now (no role restrictions)
+                .requestMatchers("/actuator/**").permitAll()
+
                 // Protected endpoints - authentication required
                 .requestMatchers("/api/v1/users/logout").authenticated()
-                .requestMatchers("/api/v1/users/profile").authenticated()
 
                 // All other requests require authentication
                 .anyRequest().authenticated()

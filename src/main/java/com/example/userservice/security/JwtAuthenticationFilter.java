@@ -11,15 +11,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
- * Production-grade JWT Authentication Filter
- * This filter intercepts every request and validates JWT tokens
+ * Simplified JWT Authentication Filter without role-based authorization
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -79,7 +80,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return;
                 }
 
-                // Load user details
+                // Load user details without role complexity
                 UserDetails userDetails = loadUserDetails(username);
 
                 // Validate JWT token
@@ -115,12 +116,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private boolean isPublicEndpoint(String requestPath) {
         return requestPath.equals("/api/v1/users/signup") ||
                requestPath.equals("/api/v1/users/login") ||
+               requestPath.equals("/error") ||
                requestPath.startsWith("/actuator/") ||
-               requestPath.equals("/error");
+               requestPath.startsWith("/api/v1/demo/") ||
+               requestPath.startsWith("/api/v1/auth/");
     }
 
     /**
-     * Load user details for authentication
+     * Simplified user details loading without role complexity
      */
     private UserDetails loadUserDetails(String username) {
         var user = userService.getUserByUsername(username);
@@ -128,10 +131,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throw new RuntimeException("User not found");
         }
 
+        // Simple authority - just give basic USER authority to all authenticated users
+        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+
         return org.springframework.security.core.userdetails.User.builder()
             .username(user.getName())
             .password(user.getPassword())
-            .authorities("USER") // You can expand this based on user roles
+            .authorities(authorities)
             .build();
     }
 }
