@@ -1,0 +1,721 @@
+{
+  "info": {
+    "name": "OAuth2 Authorization Server - Complete Testing Suite",
+    "description": "Comprehensive collection for testing OAuth2 Authorization Server and JWT User Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [
+          "// Set base URL if not already set",
+          "if (!pm.collectionVariables.get(\"baseUrl\")) {",
+          "    pm.collectionVariables.set(\"baseUrl\", \"http://localhost:8080\");",
+          "}",
+          "",
+          "// Set OAuth2 client credentials if not already set",
+          "if (!pm.collectionVariables.get(\"clientId\")) {",
+          "    pm.collectionVariables.set(\"clientId\", \"oidc-client\");",
+          "}",
+          "",
+          "if (!pm.collectionVariables.get(\"clientSecret\")) {",
+          "    pm.collectionVariables.set(\"clientSecret\", \"secret\");",
+          "}",
+          "",
+          "if (!pm.collectionVariables.get(\"redirectUri\")) {",
+          "    pm.collectionVariables.set(\"redirectUri\", \"http://127.0.0.1:8080/login/oauth2/code/oidc-client\");",
+          "}"
+        ],
+        "type": "text/javascript"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "clientId",
+      "value": "oidc-client",
+      "type": "string"
+    },
+    {
+      "key": "clientSecret",
+      "value": "secret",
+      "type": "string"
+    },
+    {
+      "key": "redirectUri",
+      "value": "http://127.0.0.1:8080/login/oauth2/code/oidc-client",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "jwtToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "authCode",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔍 Discovery Endpoints",
+      "item": [
+        {
+          "name": "OAuth2 Authorization Server Discovery",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/.well-known/oauth-authorization-server",
+              "host": ["{{baseUrl}}"],
+              "path": [".well-known", "oauth-authorization-server"]
+            },
+            "description": "RFC 8414 - OAuth 2.0 Authorization Server Metadata discovery endpoint"
+          },
+          "response": []
+        },
+        {
+          "name": "OpenID Connect Discovery",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/.well-known/openid_configuration",
+              "host": ["{{baseUrl}}"],
+              "path": [".well-known", "openid_configuration"]
+            },
+            "description": "OpenID Connect Discovery 1.0 - Configuration endpoint"
+          },
+          "response": []
+        },
+        {
+          "name": "JSON Web Key Set (JWKS)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/oauth2/jwks",
+              "host": ["{{baseUrl}}"],
+              "path": ["oauth2", "jwks"]
+            },
+            "description": "RFC 7517 - JSON Web Key Set for token validation"
+          },
+          "response": []
+        }
+      ],
+      "description": "OAuth2 and OpenID Connect discovery endpoints"
+    },
+    {
+      "name": "🛡️ OAuth2 Authorization Flow",
+      "item": [
+        {
+          "name": "Step 1: Authorization Request (Browser)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/oauth2/authorize?response_type=code&client_id={{clientId}}&redirect_uri={{redirectUri}}&scope=openid profile&state=random-state-value",
+              "host": ["{{baseUrl}}"],
+              "path": ["oauth2", "authorize"],
+              "query": [
+                {
+                  "key": "response_type",
+                  "value": "code"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{clientId}}"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "{{redirectUri}}"
+                },
+                {
+                  "key": "scope",
+                  "value": "openid profile"
+                },
+                {
+                  "key": "state",
+                  "value": "random-state-value"
+                }
+              ]
+            },
+            "description": "Step 1: Open this in browser, login with user/password, copy authorization code from redirect URL"
+          },
+          "response": []
+        },
+        {
+          "name": "Step 2: Exchange Code for Tokens",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    ",
+                  "    // Store tokens in collection variables",
+                  "    if (response.access_token) {",
+                  "        pm.collectionVariables.set(\"accessToken\", response.access_token);",
+                  "        console.log(\"Access token stored:\", response.access_token.substring(0, 20) + \"...\");",
+                  "    }",
+                  "    ",
+                  "    if (response.refresh_token) {",
+                  "        pm.collectionVariables.set(\"refreshToken\", response.refresh_token);",
+                  "        console.log(\"Refresh token stored\");",
+                  "    }",
+                  "    ",
+                  "    if (response.id_token) {",
+                  "        pm.collectionVariables.set(\"idToken\", response.id_token);",
+                  "        console.log(\"ID token stored\");",
+                  "    }",
+                  "    ",
+                  "    // Test token response structure",
+                  "    pm.test(\"Response has access_token\", function () {",
+                  "        pm.expect(response).to.have.property(\"access_token\");",
+                  "    });",
+                  "    ",
+                  "    pm.test(\"Token type is Bearer\", function () {",
+                  "        pm.expect(response.token_type).to.equal(\"Bearer\");",
+                  "    });",
+                  "    ",
+                  "    pm.test(\"Has expires_in\", function () {",
+                  "        pm.expect(response).to.have.property(\"expires_in\");",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{clientId}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{clientSecret}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "authorization_code",
+                  "type": "text"
+                },
+                {
+                  "key": "code",
+                  "value": "{{authCode}}",
+                  "type": "text",
+                  "description": "Paste the authorization code from Step 1 here"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "{{redirectUri}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/oauth2/token",
+              "host": ["{{baseUrl}}"],
+              "path": ["oauth2", "token"]
+            },
+            "description": "Step 2: Exchange authorization code for access token, refresh token, and ID token"
+          },
+          "response": []
+        }
+      ],
+      "description": "Complete OAuth2 Authorization Code Flow"
+    },
+    {
+      "name": "🔐 OAuth2 Token Operations",
+      "item": [
+        {
+          "name": "Token Introspection",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{clientId}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{clientSecret}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/oauth2/introspect",
+              "host": ["{{baseUrl}}"],
+              "path": ["oauth2", "introspect"]
+            },
+            "description": "RFC 7662 - OAuth 2.0 Token Introspection"
+          },
+          "response": []
+        },
+        {
+          "name": "UserInfo Endpoint",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/userinfo",
+              "host": ["{{baseUrl}}"],
+              "path": ["userinfo"]
+            },
+            "description": "OpenID Connect UserInfo Endpoint"
+          },
+          "response": []
+        },
+        {
+          "name": "Token Revocation",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{clientId}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{clientSecret}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/oauth2/revoke",
+              "host": ["{{baseUrl}}"],
+              "path": ["oauth2", "revoke"]
+            },
+            "description": "RFC 7009 - OAuth 2.0 Token Revocation"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    ",
+                  "    // Update tokens",
+                  "    if (response.access_token) {",
+                  "        pm.collectionVariables.set(\"accessToken\", response.access_token);",
+                  "        console.log(\"New access token stored\");",
+                  "    }",
+                  "    ",
+                  "    if (response.refresh_token) {",
+                  "        pm.collectionVariables.set(\"refreshToken\", response.refresh_token);",
+                  "        console.log(\"New refresh token stored\");",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{clientId}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{clientSecret}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "refresh_token",
+                  "type": "text"
+                },
+                {
+                  "key": "refresh_token",
+                  "value": "{{refreshToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/oauth2/token",
+              "host": ["{{baseUrl}}"],
+              "path": ["oauth2", "token"]
+            },
+            "description": "Use refresh token to get new access token"
+          },
+          "response": []
+        }
+      ],
+      "description": "OAuth2 token management operations"
+    },
+    {
+      "name": "👤 JWT User Service",
+      "item": [
+        {
+          "name": "User Registration",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.test(\"Registration successful\", function () {",
+                  "        pm.expect(response.status).to.equal(\"SUCCESS\");",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"testuser_{{$randomInt}}\",\n  \"email\": \"test_{{$randomInt}}@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "signup"]
+            },
+            "description": "Register a new user in the JWT user service"
+          },
+          "response": []
+        },
+        {
+          "name": "User Login (JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    ",
+                  "    if (response.token) {",
+                  "        pm.collectionVariables.set(\"jwtToken\", response.token);",
+                  "        console.log(\"JWT token stored:\", response.token.substring(0, 20) + \"...\");",
+                  "    }",
+                  "    ",
+                  "    pm.test(\"Login successful\", function () {",
+                  "        pm.expect(response.status).to.equal(\"SUCCESS\");",
+                  "    });",
+                  "    ",
+                  "    pm.test(\"JWT token received\", function () {",
+                  "        pm.expect(response).to.have.property(\"token\");",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser123\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "login"]
+            },
+            "description": "Login user and get JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "User Logout",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{jwtToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "logout"]
+            },
+            "description": "Logout user and invalidate JWT token"
+          },
+          "response": []
+        }
+      ],
+      "description": "JWT-based user authentication service"
+    },
+    {
+      "name": "🔍 Token Validation Service",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "health"]
+            },
+            "description": "Check token validation service health"
+          },
+          "response": []
+        },
+        {
+          "name": "Comprehensive Token Validation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{jwtToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/validate-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "validate-token"]
+            },
+            "description": "Comprehensive JWT token validation for microservices"
+          },
+          "response": []
+        },
+        {
+          "name": "Quick Token Validation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{jwtToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/quick-validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "quick-validate"]
+            },
+            "description": "Quick JWT token validation (lightweight)"
+          },
+          "response": []
+        },
+        {
+          "name": "Extract User Information",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{jwtToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/extract-user",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "extract-user"]
+            },
+            "description": "Extract user information from JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Authorization",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{jwtToken}}\",\n  \"role\": \"USER\",\n  \"permission\": \"READ\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/check-authorization",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "check-authorization"]
+            },
+            "description": "Check user authorization for specific role and permission"
+          },
+          "response": []
+        }
+      ],
+      "description": "Token validation APIs for microservices"
+    }
+  ]
+}
