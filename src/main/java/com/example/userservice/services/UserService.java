@@ -1,5 +1,6 @@
 package com.example.userservice.services;
 
+import com.example.userservice.events.SendEmail;
 import com.example.userservice.exceptions.InvalidCredentialsException;
 import com.example.userservice.exceptions.UserAlreadyExistsException;
 import com.example.userservice.models.Token;
@@ -7,6 +8,7 @@ import com.example.userservice.models.User;
 import com.example.userservice.repositories.TokenRepository;
 import com.example.userservice.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,15 +23,19 @@ public class UserService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
+    private KafkaTemplate<String, String> kafkaTemplate;
+
     @Autowired
     private TokenService tokenService;
 
     public UserService(UserRepository userRepository, TokenRepository tokenRepository,
-                      BCryptPasswordEncoder passwordEncoder, JwtService jwtService) {
+                      BCryptPasswordEncoder passwordEncoder, JwtService jwtService,
+                       KafkaTemplate<String, String> kafkaTemplate) {
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     public User signupUser(String username, String email, String password) {
@@ -56,7 +62,14 @@ public class UserService {
         user.setEmail(email.trim().toLowerCase());
         user.setPassword(passwordEncoder.encode(password));
         user.setVerified(false); // Set default verification status
-
+        //publish this user to kafka
+        //email- from,to,subject,body
+        SendEmail sendEmail = new SendEmail();
+        sendEmail.setFrom("admin@userservice.com");
+        sendEmail.setTo(email);
+        sendEmail.setSubject("Welcome to User Service");
+        sendEmail.setBody("Hello " + username + ",\n\nThank you for signing up! Please verify your email address to complete the registration process.\n\nBest regards,\nUser Service Team");
+        kafkaTemplate.send("email-topic", sendEmail.toString());
         return userRepository.save(user);
     }
 
