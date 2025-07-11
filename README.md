@@ -710,3 +710,57 @@ This application provides a **production-ready OAuth2 Authorization Server** wit
 
 **Ready for integration with any OAuth2-compliant client application!** 🚀
 
+## 🧭 Service Discovery with Eureka
+
+This project now supports service discovery using Netflix Eureka. Both the User Service and the OAuth2 Authorization Server can register themselves as Eureka clients, and a Eureka server is required for service registry and discovery.
+
+### Eureka Server Setup
+
+1. **Clone or create a Eureka Server project** (Spring Initializr, add Eureka Server dependency)
+2. **Add to your `application.properties` (Eureka Server):**
+   ```properties
+   server.port=8761
+   eureka.client.register-with-eureka=false
+   eureka.client.fetch-registry=false
+   spring.application.name=eureka-server
+   ```
+3. **Enable Eureka Server in your main class:**
+   ```java
+   @SpringBootApplication
+   @EnableEurekaServer
+   public class EurekaServerApplication { ... }
+   ```
+4. **Run the Eureka Server** (usually on port 8761)
+
+### Eureka Client Setup (User Service & OAuth2 Server)
+
+- **Dependencies:**
+  - Add `spring-cloud-starter-netflix-eureka-client` to your `build.gradle`:
+    ```groovy
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    ```
+- **Configuration:**
+  - Add to your `application.properties`:
+    ```properties
+    eureka.client.service-url.defaultZone=http://localhost:8761/eureka/
+    spring.application.name=user-service
+    eureka.instance.prefer-ip-address=true
+    ```
+- **Enable Eureka Client:**
+  - Annotate your main class:
+    ```java
+    @EnableEurekaClient
+    ```
+
+### How It Works
+- On startup, the User Service and OAuth2 Authorization Server will register themselves with the Eureka server.
+- Other microservices can discover these services by their `spring.application.name`.
+- The Eureka dashboard is available at [http://localhost:8761](http://localhost:8761).
+
+### Example Service Registration
+- **User Service**: `user-service`
+- **OAuth2 Authorization Server**: `user-service` (or a custom name if separated)
+
+### Useful Endpoints
+- Eureka Dashboard: `http://localhost:8761/`
+- Service Health: `/actuator/health`
